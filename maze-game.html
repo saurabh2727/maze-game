@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Magical Maze Adventure! 🎮</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 98vw;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .character-selection {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .character-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .character-card:hover {
+            transform: scale(1.1) rotate(2deg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .character-card.selected {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+            transform: scale(1.05);
+        }
+
+        .character-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .character-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .character-wins {
+            font-size: 1.2em;
+            color: #636e72;
+            margin-top: 5px;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .lifelines {
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #fab1a0 0%, #ff7675 100%);
+            padding: 8px 15px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .current-player {
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            padding: 8px 15px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .maze-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 10px;
+            margin: 20px 0;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .maze {
+            display: grid;
+            gap: 2px;
+            background: #2d3436;
+            padding: 2px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            width: 35px;
+            height: 35px;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            transition: all 0.2s;
+        }
+
+        .cell.wall {
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+        }
+
+        .cell.correct-path {
+            background: linear-gradient(135deg, #fff9e6 0%, #fffaed 100%);
+        }
+
+        .cell.player {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            animation: pulse 1s infinite;
+        }
+
+        .cell.end {
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+            animation: glow 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 184, 148, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 184, 148, 1); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+            padding: 10px;
+            border-radius: 15px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .instructions p {
+            margin: 3px 0;
+            color: #2d3436;
+            font-size: 0.95em;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.win {
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+            color: white;
+        }
+
+        .message.lose {
+            background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+            color: white;
+        }
+
+        .scoreboard {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .scoreboard h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            margin: 8px 0;
+            font-size: 1.1em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .arrow-controls {
+            display: grid;
+            grid-template-areas:
+                ". up ."
+                "left down right";
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin: 15px auto;
+            max-width: 200px;
+        }
+
+        .arrow-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .arrow-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .arrow-btn.up {
+            grid-area: up;
+        }
+
+        .arrow-btn.down {
+            grid-area: down;
+        }
+
+        .arrow-btn.left {
+            grid-area: left;
+        }
+
+        .arrow-btn.right {
+            grid-area: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Magical Maze Adventure! 🎮</h1>
+
+        <!-- Character Selection Screen -->
+        <div id="characterSelection">
+            <h2 style="text-align: center; color: #6c5ce7; font-size: 2em; margin-bottom: 20px;">Choose Your Hero!</h2>
+            <div class="character-selection">
+                <div class="character-card" data-character="dragon">
+                    <div class="character-icon">🐉</div>
+                    <div class="character-name">Dragon</div>
+                    <div class="character-wins">Wins: <span id="dragon-wins">0</span></div>
+                </div>
+                <div class="character-card" data-character="elephant">
+                    <div class="character-icon">🐘</div>
+                    <div class="character-name">Elephant</div>
+                    <div class="character-wins">Wins: <span id="elephant-wins">0</span></div>
+                </div>
+                <div class="character-card" data-character="lion">
+                    <div class="character-icon">🦁</div>
+                    <div class="character-name">Lion</div>
+                    <div class="character-wins">Wins: <span id="lion-wins">0</span></div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" id="startGame" disabled>Start Adventure! 🚀</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div id="gameArea" class="game-area">
+            <div class="game-info">
+                <div class="current-player" id="currentPlayer"></div>
+                <div class="lifelines" id="lifelines">❤️ Lives: 3</div>
+            </div>
+
+            <div class="message" id="message"></div>
+
+            <div style="text-align: center;">
+                <div class="maze-container">
+                    <div class="maze" id="maze"></div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <p><strong>🎯 Goal:</strong> Reach the green treasure 💰!</p>
+                <p><strong>🎮 Controls:</strong> Use Arrow Keys OR tap the buttons below to move</p>
+                <p><strong>⚠️ Warning:</strong> Hitting walls OR choosing wrong paths will cost you a life!</p>
+                <p><strong>💡 Tip:</strong> You have 3 lives. Think carefully about each move!</p>
+            </div>
+
+            <!-- Arrow Controls for Touch Devices -->
+            <div class="arrow-controls">
+                <button class="arrow-btn up" id="arrowUp">↑</button>
+                <button class="arrow-btn left" id="arrowLeft">←</button>
+                <button class="arrow-btn down" id="arrowDown">↓</button>
+                <button class="arrow-btn right" id="arrowRight">→</button>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-warning" id="newMaze">🔄 New Maze</button>
+                <button class="btn btn-success" id="changeCharacter">🔙 Change Character</button>
+            </div>
+
+            <!-- Scoreboard -->
+            <div class="scoreboard">
+                <h2>🏆 Scoreboard 🏆</h2>
+                <div class="score-row">
+                    <span>🐉 Dragon</span>
+                    <span id="score-dragon">0 wins</span>
+                </div>
+                <div class="score-row">
+                    <span>🐘 Elephant</span>
+                    <span id="score-elephant">0 wins</span>
+                </div>
+                <div class="score-row">
+                    <span>🦁 Lion</span>
+                    <span id="score-lion">0 wins</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let selectedCharacter = null;
+        let currentLevel = 1;
+        let lifelines = 3;
+        let playerPos = {x: 0, y: 0};
+        let endPos = {x: 0, y: 0};
+        let maze = [];
+        let correctPath = new Set(); // Stores correct path coordinates as "x,y"
+        const mazeSize = 20;
+
+        // Character emojis
+        const characterEmojis = {
+            dragon: '🐉',
+            elephant: '🐘',
+            lion: '🦁'
+        };
+
+        // Scores
+        let scores = {
+            dragon: 0,
+            elephant: 0,
+            lion: 0
+        };
+
+        // Load scores from localStorage
+        function loadScores() {
+            const savedScores = localStorage.getItem('mazeGameScores');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+                updateScoreDisplay();
+                updateCharacterWins();
+            }
+        }
+
+        // Save scores to localStorage
+        function saveScores() {
+            localStorage.setItem('mazeGameScores', JSON.stringify(scores));
+        }
+
+        // Update score display
+        function updateScoreDisplay() {
+            document.getElementById('score-dragon').textContent = `${scores.dragon} wins`;
+            document.getElementById('score-elephant').textContent = `${scores.elephant} wins`;
+            document.getElementById('score-lion').textContent = `${scores.lion} wins`;
+        }
+
+        // Update character wins in selection screen
+        function updateCharacterWins() {
+            document.getElementById('dragon-wins').textContent = scores.dragon;
+            document.getElementById('elephant-wins').textContent = scores.elephant;
+            document.getElementById('lion-wins').textContent = scores.lion;
+        }
+
+        // Character Selection
+        document.querySelectorAll('.character-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedCharacter = this.dataset.character;
+                document.getElementById('startGame').disabled = false;
+            });
+        });
+
+        // Start Game
+        document.getElementById('startGame').addEventListener('click', function() {
+            if (selectedCharacter) {
+                document.getElementById('characterSelection').classList.add('hidden');
+                document.getElementById('gameArea').classList.add('active');
+                initGame();
+            }
+        });
+
+        // Initialize Game
+        function initGame() {
+            lifelines = 3;
+            updateLifelines();
+            document.getElementById('currentPlayer').innerHTML = characterEmojis[selectedCharacter] + ' ' + selectedCharacter.charAt(0).toUpperCase() + selectedCharacter.slice(1);
+            generateMaze();
+            renderMaze();
+        }
+
+        // Generate Maze using recursive backtracking
+        function generateMaze() {
+            // Initialize maze with walls
+            maze = Array(mazeSize).fill(null).map(() => Array(mazeSize).fill(1));
+
+            // Create path using recursive backtracking
+            const stack = [];
+            const startX = 0;
+            const startY = 0;
+
+            maze[startY][startX] = 0;
+            stack.push({x: startX, y: startY});
+
+            const directions = [
+                {dx: 2, dy: 0}, // right
+                {dx: -2, dy: 0}, // left
+                {dx: 0, dy: 2}, // down
+                {dx: 0, dy: -2}  // up
+            ];
+
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = [];
+
+                // Find unvisited neighbors
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+
+                    if (newX >= 0 && newX < mazeSize && newY >= 0 && newY < mazeSize && maze[newY][newX] === 1) {
+                        neighbors.push({x: newX, y: newY, dx: dir.dx, dy: dir.dy});
+                    }
+                }
+
+                if (neighbors.length > 0) {
+                    // Choose random neighbor
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+                    // Remove wall between current and next
+                    maze[current.y + next.dy / 2][current.x + next.dx / 2] = 0;
+                    maze[next.y][next.x] = 0;
+
+                    stack.push({x: next.x, y: next.y});
+                } else {
+                    stack.pop();
+                }
+            }
+
+            // Add more paths and branches to create multiple route options
+            // Remove additional walls to create loops and decision points
+            const numExtraConnections = Math.floor(mazeSize * mazeSize * 0.15); // 15% extra connections
+
+            for (let i = 0; i < numExtraConnections; i++) {
+                const x = Math.floor(Math.random() * (mazeSize - 2)) + 1;
+                const y = Math.floor(Math.random() * (mazeSize - 2)) + 1;
+
+                // Only remove walls between two existing paths
+                if (maze[y][x] === 1) {
+                    let pathNeighbors = 0;
+
+                    // Check if this wall has paths on both sides
+                    if (x > 0 && maze[y][x - 1] === 0) pathNeighbors++;
+                    if (x < mazeSize - 1 && maze[y][x + 1] === 0) pathNeighbors++;
+                    if (y > 0 && maze[y - 1][x] === 0) pathNeighbors++;
+                    if (y < mazeSize - 1 && maze[y + 1][x] === 0) pathNeighbors++;
+
+                    // If the wall has at least 2 path neighbors, remove it to create a connection
+                    if (pathNeighbors >= 2) {
+                        maze[y][x] = 0;
+                    }
+                }
+            }
+
+            // Set start position
+            playerPos = {x: 0, y: 0};
+
+            // Find the farthest reachable cell using BFS
+            const visited = Array(mazeSize).fill(null).map(() => Array(mazeSize).fill(false));
+            const queue = [{x: 0, y: 0, dist: 0}];
+            visited[0][0] = true;
+            let farthestCell = {x: 0, y: 0, dist: 0};
+
+            const moveDirections = [
+                {dx: 1, dy: 0},  // right
+                {dx: -1, dy: 0}, // left
+                {dx: 0, dy: 1},  // down
+                {dx: 0, dy: -1}  // up
+            ];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+
+                if (current.dist > farthestCell.dist) {
+                    farthestCell = current;
+                }
+
+                for (const dir of moveDirections) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+
+                    if (newX >= 0 && newX < mazeSize &&
+                        newY >= 0 && newY < mazeSize &&
+                        !visited[newY][newX] &&
+                        maze[newY][newX] === 0) {
+
+                        visited[newY][newX] = true;
+                        queue.push({x: newX, y: newY, dist: current.dist + 1});
+                    }
+                }
+            }
+
+            // Place treasure at the farthest reachable cell
+            endPos = {x: farthestCell.x, y: farthestCell.y};
+
+            // Calculate the correct path
+            calculateCorrectPath();
+        }
+
+        // Calculate shortest path from start to end using BFS
+        function calculateCorrectPath() {
+            correctPath.clear();
+
+            const visited = Array(mazeSize).fill(null).map(() => Array(mazeSize).fill(false));
+            const parent = Array(mazeSize).fill(null).map(() => Array(mazeSize).fill(null));
+            const queue = [{x: playerPos.x, y: playerPos.y}];
+            visited[playerPos.y][playerPos.x] = true;
+
+            const moveDirections = [
+                {dx: 1, dy: 0},  // right
+                {dx: -1, dy: 0}, // left
+                {dx: 0, dy: 1},  // down
+                {dx: 0, dy: -1}  // up
+            ];
+
+            // BFS to find path
+            let found = false;
+            while (queue.length > 0 && !found) {
+                const current = queue.shift();
+
+                if (current.x === endPos.x && current.y === endPos.y) {
+                    found = true;
+                    break;
+                }
+
+                for (const dir of moveDirections) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+
+                    if (newX >= 0 && newX < mazeSize &&
+                        newY >= 0 && newY < mazeSize &&
+                        !visited[newY][newX] &&
+                        maze[newY][newX] === 0) {
+
+                        visited[newY][newX] = true;
+                        parent[newY][newX] = {x: current.x, y: current.y};
+                        queue.push({x: newX, y: newY});
+                    }
+                }
+            }
+
+            // Backtrack to build the correct path
+            let current = {x: endPos.x, y: endPos.y};
+            while (current) {
+                correctPath.add(`${current.x},${current.y}`);
+                current = parent[current.y][current.x];
+            }
+        }
+
+        // Render Maze
+        function renderMaze() {
+            const mazeElement = document.getElementById('maze');
+            mazeElement.innerHTML = '';
+            mazeElement.style.gridTemplateColumns = `repeat(${mazeSize}, 35px)`;
+
+            for (let y = 0; y < mazeSize; y++) {
+                for (let x = 0; x < mazeSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    if (maze[y][x] === 1) {
+                        cell.classList.add('wall');
+                    } else if (correctPath.has(`${x},${y}`)) {
+                        cell.classList.add('correct-path');
+                    }
+
+                    if (x === playerPos.x && y === playerPos.y) {
+                        cell.classList.add('player');
+                        cell.textContent = characterEmojis[selectedCharacter];
+                    }
+
+                    if (x === endPos.x && y === endPos.y) {
+                        cell.classList.add('end');
+                        cell.textContent = '💰';
+                    }
+
+                    mazeElement.appendChild(cell);
+                }
+            }
+        }
+
+        // Update Lifelines
+        function updateLifelines() {
+            const hearts = '❤️'.repeat(lifelines);
+            document.getElementById('lifelines').textContent = `${hearts} Lives: ${lifelines}`;
+        }
+
+        // Move Player
+        function movePlayer(dx, dy) {
+            const newX = playerPos.x + dx;
+            const newY = playerPos.y + dy;
+
+            // Check boundaries
+            if (newX < 0 || newX >= mazeSize || newY < 0 || newY >= mazeSize) {
+                return;
+            }
+
+            // Check if hitting wall
+            if (maze[newY][newX] === 1) {
+                lifelines--;
+                updateLifelines();
+
+                if (lifelines === 0) {
+                    gameOver(false);
+                    return;
+                }
+
+                showMessage('Oops! Hit a wall! 💥', 'lose', 1500);
+                return;
+            }
+
+            // Check if on correct path
+            if (!correctPath.has(`${newX},${newY}`)) {
+                lifelines--;
+                updateLifelines();
+
+                if (lifelines === 0) {
+                    gameOver(false);
+                    return;
+                }
+
+                showMessage('❌ Wrong path! Try again! ❌', 'lose', 1500);
+                return;
+            }
+
+            // Move player
+            playerPos.x = newX;
+            playerPos.y = newY;
+
+            // Check if reached end
+            if (playerPos.x === endPos.x && playerPos.y === endPos.y) {
+                gameOver(true);
+                return;
+            }
+
+            renderMaze();
+        }
+
+        // Keyboard Controls
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('gameArea').classList.contains('active')) return;
+            if (document.getElementById('message').classList.contains('show')) return;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        // Show Message
+        function showMessage(text, type, duration = 2000) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type} show`;
+
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, duration);
+        }
+
+        // Game Over
+        function gameOver(won) {
+            if (won) {
+                scores[selectedCharacter]++;
+                saveScores();
+                updateScoreDisplay();
+                updateCharacterWins();
+                showMessage('🎉 You Won! Amazing! 🎉', 'win', 3000);
+
+                setTimeout(() => {
+                    lifelines = 3;
+                    updateLifelines();
+                    generateMaze();
+                    renderMaze();
+                }, 3000);
+            } else {
+                showMessage('😢 Game Over! Try Again! 😢', 'lose', 3000);
+
+                setTimeout(() => {
+                    lifelines = 3;
+                    updateLifelines();
+                    playerPos = {x: 0, y: 0};
+                    renderMaze();
+                }, 3000);
+            }
+        }
+
+        // New Maze Button
+        document.getElementById('newMaze').addEventListener('click', function() {
+            lifelines = 3;
+            updateLifelines();
+            generateMaze();
+            renderMaze();
+            showMessage('🔄 New Maze Generated! 🔄', 'win', 1500);
+        });
+
+        // Change Character Button
+        document.getElementById('changeCharacter').addEventListener('click', function() {
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('characterSelection').classList.remove('hidden');
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('startGame').disabled = true;
+            selectedCharacter = null;
+        });
+
+        // Arrow Button Controls for Touch Devices
+        document.getElementById('arrowUp').addEventListener('click', function() {
+            if (!document.getElementById('gameArea').classList.contains('active')) return;
+            if (document.getElementById('message').classList.contains('show')) return;
+            movePlayer(0, -1);
+        });
+
+        document.getElementById('arrowDown').addEventListener('click', function() {
+            if (!document.getElementById('gameArea').classList.contains('active')) return;
+            if (document.getElementById('message').classList.contains('show')) return;
+            movePlayer(0, 1);
+        });
+
+        document.getElementById('arrowLeft').addEventListener('click', function() {
+            if (!document.getElementById('gameArea').classList.contains('active')) return;
+            if (document.getElementById('message').classList.contains('show')) return;
+            movePlayer(-1, 0);
+        });
+
+        document.getElementById('arrowRight').addEventListener('click', function() {
+            if (!document.getElementById('gameArea').classList.contains('active')) return;
+            if (document.getElementById('message').classList.contains('show')) return;
+            movePlayer(1, 0);
+        });
+
+        // Initialize scores on load
+        loadScores();
+    </script>
+</body>
+</html>
