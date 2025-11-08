@@ -368,8 +368,33 @@
     <div class="container">
         <h1>🎮 Magical Maze Adventure! 🎮</h1>
 
+        <!-- Difficulty Selection Screen -->
+        <div id="difficultySelection">
+            <h2 style="text-align: center; color: #6c5ce7; font-size: 2em; margin-bottom: 20px;">Choose Difficulty Level!</h2>
+            <div class="character-selection">
+                <div class="character-card" data-difficulty="easy">
+                    <div class="character-icon">😊</div>
+                    <div class="character-name">Easy</div>
+                    <div class="character-wins">15×15 Maze</div>
+                </div>
+                <div class="character-card" data-difficulty="medium">
+                    <div class="character-icon">😎</div>
+                    <div class="character-name">Medium</div>
+                    <div class="character-wins">20×20 Maze</div>
+                </div>
+                <div class="character-card" data-difficulty="hard">
+                    <div class="character-icon">🔥</div>
+                    <div class="character-name">Hard</div>
+                    <div class="character-wins">25×25 Maze</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" id="selectDifficulty" disabled>Continue to Character Selection 🎯</button>
+            </div>
+        </div>
+
         <!-- Character Selection Screen -->
-        <div id="characterSelection">
+        <div id="characterSelection" class="hidden">
             <h2 style="text-align: center; color: #6c5ce7; font-size: 2em; margin-bottom: 20px;">Choose Your Hero!</h2>
             <div class="character-selection">
                 <div class="character-card" data-character="dragon">
@@ -397,7 +422,7 @@
         <div id="gameArea" class="game-area">
             <div class="game-info">
                 <div class="current-player" id="currentPlayer"></div>
-                <div class="lifelines" id="lifelines">❤️ Lives: 3</div>
+                <div class="lifelines" id="difficultyDisplay" style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);"></div>
             </div>
 
             <div class="message" id="message"></div>
@@ -409,10 +434,9 @@
             </div>
 
             <div class="instructions">
-                <p><strong>🎯 Goal:</strong> Reach the green treasure 💰!</p>
+                <p><strong>🎯 Goal:</strong> Navigate through the maze and reach the green treasure 💰!</p>
                 <p><strong>🎮 Controls:</strong> Use Arrow Keys OR tap the buttons below to move</p>
-                <p><strong>⚠️ Warning:</strong> Choosing wrong paths will cost you a life!</p>
-                <p><strong>💡 Tip:</strong> You have 3 lives. Walls block you but don't hurt you!</p>
+                <p><strong>💡 Tip:</strong> Explore all paths! There may be multiple routes to victory!</p>
             </div>
 
             <!-- Arrow Controls for Touch Devices -->
@@ -449,6 +473,7 @@
 
     <script>
         // Game State
+        let selectedDifficulty = null;
         let selectedCharacter = null;
         let currentLevel = 1;
         let lifelines = 3;
@@ -456,7 +481,14 @@
         let endPos = {x: 0, y: 0};
         let maze = [];
         let correctPath = new Set(); // Stores correct path coordinates as "x,y"
-        const mazeSize = 20;
+        let mazeSize = 20;
+
+        // Difficulty settings
+        const difficultySizes = {
+            easy: 15,
+            medium: 20,
+            hard: 25
+        };
 
         // Character emojis
         const characterEmojis = {
@@ -501,10 +533,29 @@
             document.getElementById('lion-wins').textContent = scores.lion;
         }
 
-        // Character Selection
-        document.querySelectorAll('.character-card').forEach(card => {
+        // Difficulty Selection
+        document.querySelectorAll('[data-difficulty]').forEach(card => {
             card.addEventListener('click', function() {
-                document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('[data-difficulty]').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedDifficulty = this.dataset.difficulty;
+                mazeSize = difficultySizes[selectedDifficulty];
+                document.getElementById('selectDifficulty').disabled = false;
+            });
+        });
+
+        // Continue to Character Selection
+        document.getElementById('selectDifficulty').addEventListener('click', function() {
+            if (selectedDifficulty) {
+                document.getElementById('difficultySelection').classList.add('hidden');
+                document.getElementById('characterSelection').classList.remove('hidden');
+            }
+        });
+
+        // Character Selection
+        document.querySelectorAll('[data-character]').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('[data-character]').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 selectedCharacter = this.dataset.character;
                 document.getElementById('startGame').disabled = false;
@@ -522,9 +573,12 @@
 
         // Initialize Game
         function initGame() {
-            lifelines = 3;
-            updateLifelines();
             document.getElementById('currentPlayer').innerHTML = characterEmojis[selectedCharacter] + ' ' + selectedCharacter.charAt(0).toUpperCase() + selectedCharacter.slice(1);
+
+            // Display difficulty level
+            const difficultyIcons = { easy: '😊', medium: '😎', hard: '🔥' };
+            document.getElementById('difficultyDisplay').innerHTML = difficultyIcons[selectedDifficulty] + ' ' + selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1) + ' (' + mazeSize + '×' + mazeSize + ')';
+
             generateMaze();
             renderMaze();
         }
@@ -701,17 +755,23 @@
         function renderMaze() {
             const mazeElement = document.getElementById('maze');
             mazeElement.innerHTML = '';
-            mazeElement.style.gridTemplateColumns = `repeat(${mazeSize}, 35px)`;
+
+            // Calculate cell size based on maze size (smaller cells for bigger mazes)
+            const cellSize = mazeSize === 15 ? 40 : (mazeSize === 20 ? 32 : 28);
+            const fontSize = mazeSize === 15 ? 1.8 : (mazeSize === 20 ? 1.4 : 1.2);
+
+            mazeElement.style.gridTemplateColumns = `repeat(${mazeSize}, ${cellSize}px)`;
 
             for (let y = 0; y < mazeSize; y++) {
                 for (let x = 0; x < mazeSize; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    cell.style.fontSize = `${fontSize}em`;
 
                     if (maze[y][x] === 1) {
                         cell.classList.add('wall');
-                    } else if (correctPath.has(`${x},${y}`)) {
-                        cell.classList.add('correct-path');
                     }
 
                     if (x === playerPos.x && y === playerPos.y) {
@@ -750,21 +810,7 @@
                 return;
             }
 
-            // Check if on correct path
-            if (!correctPath.has(`${newX},${newY}`)) {
-                lifelines--;
-                updateLifelines();
-
-                if (lifelines === 0) {
-                    gameOver(false);
-                    return;
-                }
-
-                showMessage('❌ Wrong path! Try again! ❌', 'lose', 1500);
-                return;
-            }
-
-            // Move player
+            // Move player freely through any open path
             playerPos.x = newX;
             playerPos.y = newY;
 
@@ -849,12 +895,16 @@
             showMessage('🔄 New Maze Generated! 🔄', 'win', 1500);
         });
 
-        // Change Character Button
+        // Change Character Button - goes back to difficulty selection
         document.getElementById('changeCharacter').addEventListener('click', function() {
             document.getElementById('gameArea').classList.remove('active');
-            document.getElementById('characterSelection').classList.remove('hidden');
-            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('characterSelection').classList.add('hidden');
+            document.getElementById('difficultySelection').classList.remove('hidden');
+            document.querySelectorAll('[data-difficulty]').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('[data-character]').forEach(c => c.classList.remove('selected'));
+            document.getElementById('selectDifficulty').disabled = true;
             document.getElementById('startGame').disabled = true;
+            selectedDifficulty = null;
             selectedCharacter = null;
         });
 
