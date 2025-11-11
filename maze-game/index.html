@@ -490,6 +490,7 @@
         let endPos = {x: 0, y: 0};
         let maze = [];
         let correctPath = new Set(); // Stores correct path coordinates as "x,y"
+        let visitedCells = new Set(); // Track visited cells to prevent scoring on revisits
         let mazeSize = 20;
 
         // Difficulty settings
@@ -583,6 +584,8 @@
         // Initialize Game
         function initGame() {
             score = 0;
+            visitedCells.clear();
+            visitedCells.add('0,0'); // Mark starting position as visited
             updateScore();
 
             document.getElementById('currentPlayer').innerHTML = characterEmojis[selectedCharacter] + ' ' + selectedCharacter.charAt(0).toUpperCase() + selectedCharacter.slice(1);
@@ -891,23 +894,35 @@
                 return;
             }
 
-            // Calculate distances to determine if this is an optimal move
-            const currentDistance = calculateShortestDistance(playerPos.x, playerPos.y);
-            const newDistance = calculateShortestDistance(newX, newY);
+            const cellKey = `${newX},${newY}`;
+            const isNewCell = !visitedCells.has(cellKey);
 
-            // Award points based on whether move brings player closer to goal
-            const isOptimalMove = newDistance < currentDistance;
+            // Only award points for visiting new cells
+            if (isNewCell) {
+                // Calculate distances to determine if this is an optimal move
+                const currentDistance = calculateShortestDistance(playerPos.x, playerPos.y);
+                const newDistance = calculateShortestDistance(newX, newY);
 
-            if (isOptimalMove) {
-                // Optimal move - brings player closer to treasure
-                score += 10;
+                // Award points based on whether move brings player closer to goal
+                const isOptimalMove = newDistance < currentDistance;
+
+                if (isOptimalMove) {
+                    // Optimal move - brings player closer to treasure
+                    score += 10;
+                } else {
+                    // Exploring - valid move but doesn't bring player closer
+                    score += 5;
+                }
+
+                // Mark cell as visited
+                visitedCells.add(cellKey);
+
+                // Debug log
+                console.log(`Move to (${newX},${newY}): Distance ${currentDistance} → ${newDistance}. ${isOptimalMove ? 'Optimal (+10)' : 'Exploring (+5)'}, Total score: ${score}`);
             } else {
-                // Exploring - valid move but doesn't bring player closer
-                score += 5;
+                // Revisiting a cell - no points awarded
+                console.log(`Move to (${newX},${newY}): Already visited (0 points), Total score: ${score}`);
             }
-
-            // Debug log
-            console.log(`Move from (${playerPos.x},${playerPos.y}) to (${newX},${newY}): Distance ${currentDistance} → ${newDistance}. ${isOptimalMove ? 'Optimal (+10)' : 'Exploring (+5)'}, Total score: ${score}`);
 
             updateScore();
 
@@ -973,6 +988,8 @@
 
                 setTimeout(() => {
                     score = 0;
+                    visitedCells.clear();
+                    visitedCells.add('0,0');
                     updateScore();
                     generateMaze();
                     renderMaze();
@@ -983,6 +1000,8 @@
         // New Maze Button
         document.getElementById('newMaze').addEventListener('click', function() {
             score = 0;
+            visitedCells.clear();
+            visitedCells.add('0,0');
             updateScore();
             generateMaze();
             renderMaze();
