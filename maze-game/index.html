@@ -444,8 +444,8 @@
             <div class="instructions">
                 <p><strong>🎯 Goal:</strong> Find the SHORTEST path to the treasure 💰 and earn maximum points!</p>
                 <p><strong>🎮 Controls:</strong> Use Arrow Keys, tap arrow buttons, OR tap adjacent cells to move!</p>
-                <p><strong>⭐ Scoring:</strong> Earn +10 points for optimal moves, +5 for exploring, +100 for finding treasure!</p>
-                <p><strong>💡 Tip:</strong> The shortest path gives you the highest score!</p>
+                <p><strong>⭐ Scoring:</strong> Earn +10 points ONLY for moves that bring you closer to treasure, +100 for finding it!</p>
+                <p><strong>💡 Tip:</strong> Every step should bring you closer to the goal - wrong paths give 0 points!</p>
             </div>
 
             <!-- Arrow Controls for Touch Devices -->
@@ -903,22 +903,20 @@
                 const currentDistance = calculateShortestDistance(playerPos.x, playerPos.y);
                 const newDistance = calculateShortestDistance(newX, newY);
 
-                // Award points based on whether move brings player closer to goal
+                // Award points ONLY for optimal moves that bring player closer
                 const isOptimalMove = newDistance < currentDistance;
 
                 if (isOptimalMove) {
                     // Optimal move - brings player closer to treasure
                     score += 10;
+                    console.log(`Move to (${newX},${newY}): Distance ${currentDistance} → ${newDistance}. Optimal (+10), Total score: ${score}`);
                 } else {
-                    // Exploring - valid move but doesn't bring player closer
-                    score += 5;
+                    // Not optimal - no points awarded
+                    console.log(`Move to (${newX},${newY}): Distance ${currentDistance} → ${newDistance}. Not optimal (0 points), Total score: ${score}`);
                 }
 
                 // Mark cell as visited
                 visitedCells.add(cellKey);
-
-                // Debug log
-                console.log(`Move to (${newX},${newY}): Distance ${currentDistance} → ${newDistance}. ${isOptimalMove ? 'Optimal (+10)' : 'Exploring (+5)'}, Total score: ${score}`);
             } else {
                 // Revisiting a cell - no points awarded
                 console.log(`Move to (${newX},${newY}): Already visited (0 points), Total score: ${score}`);
